@@ -13,3 +13,4 @@ Simple tool which extract open/new issues from Bitbucket.
 - Alternative : http://cunneen.github.io/Bitbucket-Issue-Tracker-Visualizer/public_html/index.html
 - Testing the Bitbucket API : http://restbrowser.bitbucket.org/
 - Define in a config file all the Bitbucket data (ACCOUNTNAME, REPO_SLUG, USER, PWD)
+- example : bit.ly/1maw4zr

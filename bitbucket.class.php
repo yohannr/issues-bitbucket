@@ -44,8 +44,7 @@ class Bitbucket
 		curl_close($ch);
 
 		if ($info['http_code'] != 200) {
-			echo 'Error HTTP '.$info['http_code'];
-			return false;
+			return $arr_issues['error'] = 'Error HTTP '.$info['http_code'];
 		}
 
 		$result = json_decode($response);
@@ -59,7 +58,12 @@ class Bitbucket
 			$arr_issues[$i]['priority'] = $issue->priority;
 			$arr_issues[$i]['title'] = $issue->title;
 			$arr_issues[$i]['reported_by'] = $issue->reported_by->display_name;
-			$arr_issues[$i]['responsible'] = $issue->responsible->display_name;
+			if (isset($issue->responsible->display_name)) {
+				$arr_issues[$i]['responsible'] = $issue->responsible->display_name;
+			}
+			else {
+				$arr_issues[$i]['responsible'] = '';
+			}
 			$arr_issues[$i]['type'] = $issue->metadata->kind;
 			$arr_issues[$i]['content'] = $issue->content;
 			$arr_issues[$i]['created'] = $issue->created_on;
@@ -126,11 +130,11 @@ class Bitbucket
 	/*
 	 * Export issues into Excel file, using PHPExcel library
 	*/
-	public function exportExcel($arr_issues)
+	public function exportExcel($arr_issues, $returnLastComment = false)
 	{
 
-		require_once 'lib\PHPExcel.php';
-				
+		require_once dirname(__FILE__).'/lib/PHPExcel.php';
+
 		$objPHPExcel = new PHPExcel();
 		$objPHPExcel->setActiveSheetIndex(0);
 		$sheet = $objPHPExcel->getActiveSheet();
@@ -172,8 +176,10 @@ class Bitbucket
 			$sheet->SetCellValue('C'.$i, $issue['priority']);
 			$sheet->SetCellValue('D'.$i, $issue['content']);
 			$sheet->getStyle('D'.$i)->getAlignment()->setWrapText(true);
-			$sheet->SetCellValue('E'.$i, $this->getLastComment($issue['id']));
-			$sheet->getStyle('E'.$i)->getAlignment()->setWrapText(true);
+			if ($returnLastComment) {
+				$sheet->SetCellValue('E'.$i, $this->getLastComment($issue['id']));
+				$sheet->getStyle('E'.$i)->getAlignment()->setWrapText(true);
+			}
 			$sheet->SetCellValue('F'.$i, $issue['status']);
 			$sheet->SetCellValue('G'.$i, $issue['reported_by']);
 			$sheet->SetCellValue('H'.$i, $issue['responsible']);
@@ -182,9 +188,12 @@ class Bitbucket
 			$i++;
 		}
 
+		
 		$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, "Excel5");
-		$filename ='Issues';
-		$objWriter->save($filename.'.xls');
+		$filename ='Issues.xls';
+		$objWriter->save($filename);
+
+		return $filename;
 	}
 
 }
